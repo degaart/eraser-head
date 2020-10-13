@@ -46,7 +46,7 @@ void FileList_Add(struct FileList* l, struct File* f)
 }
 
 static
-bool loadFileList(struct FileList* fl, const char* path)
+bool loadFileList(struct FileList* fl, const char* path, time_t* lastProgress)
 {
     DIR* dir = opendir(path);
     if(!dir) {
@@ -68,7 +68,7 @@ bool loadFileList(struct FileList* fl, const char* path)
             strcat(filename, entry->d_name);
 
             if(entry->d_type == DT_DIR) {
-                bool ret = loadFileList(fl, filename);
+                bool ret = loadFileList(fl, filename, lastProgress);
                 if(!ret) {
                     closedir(dir);
                     return false;
@@ -81,7 +81,11 @@ bool loadFileList(struct FileList* fl, const char* path)
             }
         }
 
-        printf("\r%zu...", fl->count);
+        time_t now = time(NULL);
+        if(now - *lastProgress > 1) {
+            printf("\r%zu...", fl->count);
+            *lastProgress = now;
+        }
     }
     closedir(dir);
 
@@ -139,10 +143,11 @@ void progress(int value, int max, time_t elapsed)
 }
 
 static
-bool recursiveDelete(const struct FileList* lst)
+bool recursiveDelete(const struct FileList* lst, time_t startTime)
 {
     printf("\n");
 
+    time_t lastProgress = startTime;
     size_t currentCount = 0;
     struct File* f;
     for(f = lst->head; f; f = f->next)  {
@@ -162,7 +167,11 @@ bool recursiveDelete(const struct FileList* lst)
 
         currentCount++;
 
-        progress(currentCount, lst->count, 0);
+        time_t now = time(NULL);
+        if(now - lastProgress > 1) {
+            progress(currentCount, lst->count, now - startTime);
+            lastProgress = now;
+        }
     }
     return true;
 }
@@ -224,18 +233,21 @@ int main(int argc, char** argv)
     const char* path = argv[1];
     printf("Scanning \"%s\"\n", path);
 
+    time_t lastProgress = 0;
     struct FileList lst = {0};
-    bool ret = loadFileList(&lst, path);
+    bool ret = loadFileList(&lst, path, &lastProgress);
     if(!ret) {
         return 1;
     }
     printf("\nTotal files: %zu\n", lst.count);
 
     /* Recursive delete */
-    ret = recursiveDelete(&lst);
+    time_t startTime = time(NULL);
+    ret = recursiveDelete(&lst, startTime);
     if(!ret) {
         return 1;
     }
+    progress(lst.count, lst.count, time(NULL) - startTime);
 
     return 0;
 }
