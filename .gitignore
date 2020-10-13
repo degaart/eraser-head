@@ -5,3 +5,11 @@
 Build
 build.sh
 run-project.sh
+Makefile.in
+aclocal.m4
+configure
+.deps
+build-aux
+autom4te.cache
+build.sh
+run-project.sh
