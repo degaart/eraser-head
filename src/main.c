@@ -84,6 +84,7 @@ bool loadFileList(struct FileList* fl, const char* path, time_t* lastProgress)
         time_t now = time(NULL);
         if(now - *lastProgress > 1) {
             printf("\r%zu...", fl->count);
+            fflush(stdout);
             *lastProgress = now;
         }
     }
