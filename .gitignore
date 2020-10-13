@@ -1,0 +1,7 @@
+*.bak
+*.swp
+*~
+.DS_Store
+Build
+build.sh
+run-project.sh
