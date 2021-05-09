@@ -59,7 +59,7 @@ bool loadFileList(struct FileList* fl, const char* path, time_t* lastProgress)
     while((entry = readdir(dir)) != NULL) {
         if(strcmp(entry->d_name, ".") && strcmp(entry->d_name, "..")) {
             /* Contents of a directory must be listed before it */
-            size_t filenameSize = strlen(path) + entry->d_namlen + 2;   /* zero terminator + one optional slash */
+            size_t filenameSize = strlen(path) + strlen(entry->d_name) + 2;   /* zero terminator + one optional slash */
             char* filename = malloc(filenameSize);
             strcpy(filename, path);
             if(strlen(filename) && filename[strlen(filename) - 1] != '/') {
